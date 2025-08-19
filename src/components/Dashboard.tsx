@@ -986,15 +986,21 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               )}
 
               {/* Warranty Information */}
-              {'warranty' in product && product.warranty && (product.warranty.title || product.warranty.description) && (
+              {'warranty' in product && product.warranty && (
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Warranty</h3>
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    {product.warranty.title && (
-                      <div className="text-sm font-medium text-blue-800 mb-1">{product.warranty.title}</div>
-                    )}
-                    {product.warranty.description && (
-                      <div className="text-sm text-blue-700">{safeRender(product.warranty.description)}</div>
+                    {typeof product.warranty === 'string' ? (
+                      <div className="text-sm text-blue-700">{product.warranty}</div>
+                    ) : (
+                      <>
+                        {product.warranty.title && (
+                          <div className="text-sm font-medium text-blue-800 mb-1">{product.warranty.title}</div>
+                        )}
+                        {product.warranty.description && (
+                          <div className="text-sm text-blue-700">{safeRender(product.warranty.description)}</div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -1510,9 +1516,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                       </div>
                     </div>
                   )}
-
-                  
-                 
                 </>
               )}
 

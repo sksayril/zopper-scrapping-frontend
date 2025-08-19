@@ -106,9 +106,64 @@ export interface BaseProduct {
   specifications: ProductSpecification;
   scrapedAt: string;
   source?: string;
+  // JioMart specific fields
+  productName?: string;
+  productId?: string;
+  brand?: string;
+  platform?: string;
+  sellingPrice?: number;
+  mrp?: number | null;
+  pricePerUnit?: number | null;
+  productImages?: ProductImage[];
+  reviews?: {
+    rating?: number;
+    totalReviews?: number;
+    averageRating?: number;
+    reviewWidget?: string;
+  };
+  bankOffers?: Array<{
+    type: string;
+    title: string;
+    description: string;
+    count: string;
+    index: number;
+  }> | string[];
+  couponOffers?: Array<{
+    type: string;
+    title: string;
+    description: string;
+    count: string;
+    index: number;
+  }> | string[];
+  allOffers?: Array<{
+    icon: string;
+    title: string;
+    description: string;
+    count: string;
+    index: number;
+  }>;
+  features?: string[] | Array<{
+    name: string;
+    value: string;
+  }>;
+  productInformation?: {
+    [key: string]: any;
+  };
+  seller?: string | ProductSeller;
+  deliveryInfo?: {
+    promise?: string;
+    location?: string;
+    message?: string;
+  };
+  returnPolicy?: string | MaxFashionReturnPolicy;
+  availability?: {
+    inStock?: boolean;
+    status?: string;
+  } | string;
+  hiddenData?: {
+    [key: string]: string;
+  };
   // Ajio specific fields
-  bankOffers?: string[];
-  couponOffers?: string[];
   colors?: string[];
   availableColors?: number;
   availableSizes?: number;
@@ -117,14 +172,6 @@ export interface BaseProduct {
     mainCategory: string;
     subCategory: string;
     fullCategory: string;
-  };
-  deliveryInfo?: {
-    message: string;
-  };
-  returnPolicy?: string | MaxFashionReturnPolicy;
-  pricePerUnit?: string;
-  productInformation?: {
-    [key: string]: string;
   };
   // Flipkart specific fields
   thumbnails?: ProductImage[];
@@ -139,7 +186,7 @@ export interface BaseProduct {
   warranty?: {
     title?: string;
     description?: string;
-  };
+  } | string;
   installation?: {
     title?: string;
     description?: string;
@@ -170,6 +217,12 @@ export interface ExtendedProduct extends BaseProduct {
   returnPolicy?: MaxFashionReturnPolicy;
   paymentOptions?: MaxFashionPaymentOptions;
   overview?: MaxFashionOverview;
+  // TataCliq specific fields
+  features?: Array<{
+    name: string;
+    value: string;
+  }>;
+  brandInfo?: string;
 }
 
 // Union type for all product types
@@ -412,117 +465,7 @@ export const normalizeProductData = (product: any, siteId: SiteId): Product => {
       currency: product.currency,
       rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
       ratingCount: typeof product.ratingCount === 'number' ? product.ratingCount.toString() : product.ratingCount,
-      images: Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
-        typeof img === 'string' 
-          ? { url: img, alt: '', type: 'product', index }
-          : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
-      ) : [],
-      description: product.description,
-      highlights: product.highlights || [],
-      specifications: product.specifications || {},
-      brand: product.brand,
-      productId: product.productId,
-      availability: product.availability,
-      scrapedAt: product.scrapedAt,
-      source: product.source
-    };
-  }
-
-  // Handle JioMart specific structure
-  if (siteId === 'jiomart') {
-    return {
-      id: product.productId || product.id,
-      title: product.title,
-      url: product.url,
-      currentPrice: typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice,
-      originalPrice: typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice,
-      discount: typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount,
-      discountPercentage: product.discountPercentage,
-      currency: product.currency,
-      rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
-      ratingCount: typeof product.ratingCount === 'number' ? product.ratingCount.toString() : product.ratingCount,
-      images: Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
-        typeof img === 'string' 
-          ? { url: img, alt: '', type: 'product', index }
-          : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
-      ) : [],
-      description: product.description,
-      highlights: product.highlights || [],
-      specifications: product.specifications || {},
-      brand: product.brand,
-      productId: product.productId,
-      availability: product.availability,
-      delivery: product.delivery,
-      scrapedAt: product.scrapedAt,
-      source: product.source
-    };
-  }
-
-  // Handle Ajio specific structure
-  if (siteId === 'ajio') {
-    return {
-      id: product.productId || product.id,
-      title: product.productName || product.productLongName || product.title,
-      url: product.url,
-      currentPrice: product.sellingPrice ? `₹${product.sellingPrice}` : (typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice),
-      originalPrice: product.mrp ? `₹${product.mrp}` : (typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice),
-      discount: product.discount ? `${product.discount}% off` : (typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount),
-      discountPercentage: product.discount || product.discountPercentage,
-      currency: product.currency || '₹',
-      rating: product.rating ? product.rating.toString() : (typeof product.rating === 'number' ? product.rating.toString() : product.rating),
-      ratingCount: product.reviewCount ? product.reviewCount.toString() : (typeof product.ratingCount === 'number' ? product.ratingCount.toString() : product.ratingCount),
-      reviewCount: product.reviewCount ? product.reviewCount.toString() : (typeof product.reviewCount === 'number' ? product.reviewCount.toString() : product.reviewCount),
-      images: product.productImages ? product.productImages.map((img: string, index: number) => ({
-        url: img,
-        alt: `${product.productName || 'Product'} - Image ${index + 1}`,
-        type: 'product',
-        index
-      })) : (Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
-        typeof img === 'string' 
-          ? { url: img, alt: '', type: 'product', index }
-          : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
-      ) : []),
-      mainImage: product.mainImage,
-      description: product.description || product.productInformation?.Commodity || '',
-      highlights: product.features || product.highlights || [],
-      specifications: product.specifications || {},
-      brand: product.brand,
-      productId: product.productId,
-      sizes: product.sizes,
-      availability: product.availability,
-      offers: product.allOffers ? product.allOffers.map((offer: string) => ({
-        type: 'Offer',
-        description: offer
-      })) : product.offers,
-      bankOffers: product.bankOffers,
-      couponOffers: product.couponOffers,
-      colors: product.colors,
-      availableColors: product.availableColors,
-      availableSizes: product.availableSizes,
-      category: product.category,
-      seller: product.seller,
-      deliveryInfo: product.deliveryInfo,
-      returnPolicy: product.returnPolicy,
-      pricePerUnit: product.pricePerUnit,
-      productInformation: product.productInformation,
-      scrapedAt: product.timestamp || product.scrapedAt,
-      source: product.source || 'AJIO'
-    };
-  }
-
-  // Handle Croma specific structure
-  if (siteId === 'croma') {
-    return {
-      id: product.productId || product.id,
-      title: product.title,
-      url: product.url,
-      currentPrice: typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice,
-      originalPrice: typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice,
-      discount: typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount,
-      discountPercentage: product.discountPercentage,
-      currency: product.currency,
-      rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
-      ratingCount: typeof product.ratingCount === 'number' ? product.ratingCount.toString() : product.ratingCount,
+      reviewCount: typeof product.reviewCount === 'number' ? product.reviewCount.toString() : product.reviewCount,
       images: Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
         typeof img === 'string' 
           ? { url: img, alt: '', type: 'product', index }
@@ -535,11 +478,58 @@ export const normalizeProductData = (product: any, siteId: SiteId): Product => {
       productId: product.productId,
       availability: product.availability,
       offers: product.offers,
-      delivery: product.delivery,
+      features: product.features,
+      warranty: product.warranty,
+      brandInfo: product.brandInfo,
       scrapedAt: product.scrapedAt,
-      source: product.source
+      source: product.source || 'TataCliq'
     };
   }
+
+  // Handle JioMart specific structure
+  if (siteId === 'jiomart') {
+    return {
+      id: product.productId || product.id,
+      title: product.productName || product.title,
+      url: product.url,
+      currentPrice: product.sellingPrice || product.currentPrice,
+      originalPrice: product.mrp || product.originalPrice,
+      discount: product.discount,
+      discountPercentage: product.discountPercentage,
+      currency: product.currency || '₹',
+      rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
+      ratingCount: typeof product.reviewCount === 'number' ? product.reviewCount.toString() : product.reviewCount,
+      reviewCount: typeof product.reviewCount === 'number' ? product.reviewCount.toString() : product.reviewCount,
+      images: product.productImages || product.images || [],
+      mainImage: product.mainImage?.url || product.mainImage,
+      description: product.description,
+      highlights: product.features || product.highlights || [],
+      specifications: product.specifications || {},
+      brand: product.brand,
+      productId: product.productId,
+      platform: product.platform,
+      sellingPrice: product.sellingPrice,
+      mrp: product.mrp,
+      pricePerUnit: product.pricePerUnit,
+      productImages: product.productImages,
+      reviews: product.reviews,
+      bankOffers: product.bankOffers,
+      couponOffers: product.couponOffers,
+      allOffers: product.allOffers,
+      features: product.features,
+      productInformation: product.productInformation,
+      seller: product.seller,
+      deliveryInfo: product.deliveryInfo,
+      returnPolicy: product.returnPolicy,
+      availability: product.availability,
+      hiddenData: product.hiddenData,
+      category: product.category,
+      scrapedAt: product.scrapedAt,
+      source: product.source || 'JioMart'
+    };
+  }
+
+
 
   // Handle Flipkart specific structure
   if (siteId === 'flipkart') {
