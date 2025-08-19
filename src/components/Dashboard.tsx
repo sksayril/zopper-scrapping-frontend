@@ -440,8 +440,18 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Images</h3>
                 <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4">
                   <img
-                    src={'mainImage' in product && product.mainImage ? product.mainImage : getMainImage(product.images)}
-                    alt={product.title}
+                    src={
+                      'mainImage' in product && product.mainImage && typeof product.mainImage === 'object' && (product.mainImage as any).url 
+                        ? (product.mainImage as any).url 
+                        : 'mainImage' in product && product.mainImage 
+                        ? product.mainImage 
+                        : getMainImage(product.images)
+                    }
+                    alt={
+                      'productName' in product && product.productName 
+                        ? String(product.productName)
+                        : product.title
+                    }
                     className="w-full h-full object-contain"
                     loading="lazy"
                     onError={(e) => {
@@ -453,16 +463,31 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 
                 {/* Thumbnail Images */}
                 <div className="grid grid-cols-5 gap-2">
-                  {getThumbnailImages(product.images).map((image, index) => (
-                    <div key={index} className="aspect-square bg-gray-50 rounded-lg overflow-hidden">
-                      <img
-                        src={image.url}
-                        alt={image.alt}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
+                  {('productImages' in product && product.productImages && Array.isArray(product.productImages)) ? (
+                    // JioMart product images
+                    (product.productImages as any[]).slice(0, 5).map((image: any, index: number) => (
+                      <div key={index} className="aspect-square bg-gray-50 rounded-lg overflow-hidden">
+                        <img
+                          src={image.url}
+                          alt={image.alt || `Product image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    // Regular images
+                    getThumbnailImages(product.images).map((image, index) => (
+                      <div key={index} className="aspect-square bg-gray-50 rounded-lg overflow-hidden">
+                        <img
+                          src={image.url}
+                          alt={image.alt}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -473,18 +498,25 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 <div className="space-y-4">
                   {/* Title */}
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">{product.title}</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">
+                      {'productName' in product && product.productName 
+                        ? String(product.productName)
+                        : product.title
+                      }
+                    </h2>
                   </div>
 
                   {/* Brand */}
-                  {'brand' in product && renderBrand(product.brand)}
+                  {('brand' in product && product.brand) || ('brand' in product && (product as any).brand) ? (
+                    renderBrand((product as any).brand || product.brand)
+                  ) : null}
 
                   {/* Description */}
-                  {product.description && (
+                  {(product.description || ('description' in product && product.description)) && (
                     <div className="mb-4">
                       <h4 className="text-sm font-medium text-gray-700 mb-2">Description:</h4>
                       <p className="text-sm text-gray-600 leading-relaxed">
-                        {product.description}
+                        {product.description || (product as any).description}
                       </p>
                     </div>
                   )}
@@ -492,20 +524,30 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   {/* Price */}
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl font-bold text-gray-900">
-                      ₹{formatPrice(product.currentPrice)}
+                      ₹{formatPrice(
+                        'sellingPrice' in product && product.sellingPrice 
+                          ? (product as any).sellingPrice 
+                          : product.currentPrice
+                      )}
                     </span>
-                    {product.originalPrice && (
+                    {('mrp' in product && (product as any).mrp) || product.originalPrice ? (
                       <>
                         <span className="text-lg text-gray-500 line-through">
-                          ₹{formatPrice(product.originalPrice)}
+                          ₹{formatPrice(
+                            'mrp' in product && (product as any).mrp 
+                              ? (product as any).mrp 
+                              : product.originalPrice
+                          )}
                         </span>
-                        {product.discount && (
+                        {('discount' in product && (product as any).discount) || product.discount ? (
                           <span className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
-                            {typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount}
+                            {typeof (product as any).discount === 'number' 
+                              ? `₹${(product as any).discount} off` 
+                              : (product as any).discount || product.discount}
                           </span>
-                        )}
+                        ) : null}
                       </>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Vijay Sales Pricing Info */}
@@ -556,17 +598,25 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   )}
 
                   {/* Rating */}
-                  {product.rating && (
+                  {(product.rating || ('rating' in product && (product as any).rating)) && (
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center space-x-1 bg-green-500 text-white px-3 py-1 rounded-lg">
                         <Star className="w-4 h-4 fill-current" />
                         <span className="font-medium">
-                          {safeRender(product.rating)}
+                          {safeRender(
+                            'rating' in product && (product as any).rating 
+                              ? (product as any).rating 
+                              : product.rating
+                          )}
                         </span>
                       </div>
-                      {product.ratingCount && (
+                      {(product.ratingCount || ('reviewCount' in product && (product as any).reviewCount)) && (
                         <span className="text-sm text-gray-600">
-                          {safeRender(product.ratingCount)}
+                          {safeRender(
+                            'reviewCount' in product && (product as any).reviewCount 
+                              ? (product as any).reviewCount 
+                              : product.ratingCount
+                          )}
                         </span>
                       )}
                     </div>
@@ -730,12 +780,14 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Highlights */}
-                {product.highlights && product.highlights.length > 0 && (
+                {(product.highlights && product.highlights.length > 0) || ('features' in product && product.features && Array.isArray(product.features) && product.features.length > 0) ? (
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-gray-900">Key Highlights</h3>
                       <span className="text-sm text-gray-500">
-                        {product.highlights.length} features
+                        {('features' in product && product.features && Array.isArray(product.features)) 
+                          ? (product.features as any[]).length 
+                          : product.highlights?.length || 0} features
                       </span>
                     </div>
                     <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
@@ -746,26 +798,41 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                           </tr>
                         </thead>
                         <tbody>
-                          {product.highlights.map((highlight, index) => {
-                            // Handle different highlight formats
-                            const displayText = safeRender(highlight);
-                            
-                            return (
+                          {('features' in product && product.features && Array.isArray(product.features) && product.features.length > 0) ? (
+                            // JioMart features
+                            (product.features as any[]).map((feature: any, index: number) => (
                               <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
                                 <td className="px-4 py-3 text-sm text-gray-700 border-b border-gray-100">
                                   <div className="flex items-start space-x-2">
                                     <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                                    <span>{displayText}</span>
+                                    <span>{feature}</span>
                                   </div>
                                 </td>
                               </tr>
-                            );
-                          })}
+                            ))
+                          ) : (
+                            // Regular highlights
+                            product.highlights?.map((highlight, index) => {
+                              // Handle different highlight formats
+                              const displayText = safeRender(highlight);
+                              
+                              return (
+                                <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
+                                  <td className="px-4 py-3 text-sm text-gray-700 border-b border-gray-100">
+                                    <div className="flex items-start space-x-2">
+                                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                      <span>{displayText}</span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            }) || []
+                          )}
                         </tbody>
                       </table>
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 {/* Specifications */}
                 {getSpecificationList(product.specifications).length > 0 && (
@@ -1408,16 +1475,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                               ) : 'src' in image ? (
                                 <div className="mb-2">
                                   <img 
-                                    src={image.src} 
-                                    alt={image.alt || `Product image ${index + 1}`} 
+                                    src={(image as any).src} 
+                                    alt={(image as any).alt || `Product image ${index + 1}`} 
                                     className="w-full h-24 object-cover rounded border"
                                     onError={(e) => {
                                       const target = e.target as HTMLImageElement;
-                                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04MCAxMDBDODAgODkuNTQ0NyA4OC4wMDAxIDgxIDEwMCA4MUMxMTEuOTU2IDgxIDEyMCA4OS41NDQ3IDEyMCAxMDBDMTIwIDExMC40NTUgMTExLjk1NiAxMTkgMTAwIDExOUM4OC4wMDAxIDExOSA4MCAxMTAuNDU1IDgwIDEwMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTEwMCAxMzVDMTE1LjQ2NCAxMzUgMTI3LjUgMTIyLjk2NCAxMjcuNSAxMDcuNUMxMjcuNSA5Mi4wMzU5IDcyLjUgODAgMTAwIDgwQzg0LjUzNTkgODAgNzIuNSA5Mi4wMzU5IDcyLjUgMTA3LjVDNzIuNSA5Mi4wMzU5IDcyLjUgMTA3LjVDNzIuNSAxMjIuOTY0IDg0LjUzNTkgMTM1IDEwMCAxMzVaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4K';
+                                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04MCAxMDBDODAgODkuNTQ0NyA4OC4wMDAxIDgxIDEwMCA4MUMxMTEuOTU2IDgxIDEyMCA4OS41NDQ3IDEyMCAxMDBDMTIwIDExMC40NTUgMTExLjk1NiAxMTkgMTAwIDExOUM4OC4wMDAxIDExOSA4MCAxMTAuNDU1IDgwIDEwMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTEwMCAxMzVDMTE1LjQ2NCAxMzUgMTI3LjUgMTIyLjk2NCAxMjcuNSAxMDcuNUMxMjcuNSA5Mi4wMzU5IDExNS40NjQgODAgMTAwIDgwQzg0LjUzNTkgODAgNzIuNSA5Mi4wMzU5IDcyLjUgMTA3LjVDNzIuNSA5Mi4wMzU5IDcyLjUgMTA3LjVDNzIuNSAxMjIuOTY0IDg0LjUzNTkgMTM1IDEwMCAxMzVaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4K';
                                     }}
                                   />
                                   <div className="text-xs text-gray-600 mt-1">
-                                    {image.alt || `Image ${index + 1}`}
+                                    {(image as any).alt || `Image ${index + 1}`}
                                   </div>
                                 </div>
                               ) : (
@@ -1446,6 +1513,392 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
                   
                  
+                </>
+              )}
+
+                                {/* JioMart Specific Sections */}
+                  {(product.source === 'JioMart' || (product.url && product.url.includes('jiomart.com'))) && (
+                    <>
+                      {/* Product Name and ID */}
+                      {'productName' in product && product.productName && (
+                        <div className="mt-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Details</h3>
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {product.productName && (
+                                <div className="text-sm">
+                                  <span className="font-medium text-blue-800">Product Name:</span>
+                                  <span className="text-blue-700 ml-2">{String(product.productName)}</span>
+                                </div>
+                              )}
+                              {(product as any).productId && (
+                                <div className="text-sm">
+                                  <span className="font-medium text-blue-800">Product ID:</span>
+                                  <span className="text-blue-700 ml-2 font-mono">{(product as any).productId}</span>
+                                </div>
+                              )}
+                              {(product as any).brand && (
+                                <div className="text-sm">
+                                  <span className="font-medium text-blue-800">Brand:</span>
+                                  <span className="text-blue-700 ml-2">{(product as any).brand}</span>
+                                </div>
+                              )}
+                              {(product as any).platform && (
+                                <div className="text-sm">
+                                  <span className="font-medium text-blue-800">Platform:</span>
+                                  <span className="text-blue-700 ml-2">{(product as any).platform}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                  {/* Category Information */}
+                  {'category' in product && product.category && typeof product.category === 'object' && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Information</h3>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {(product.category as any).mainCategory && (
+                            <div className="text-sm">
+                              <span className="font-medium text-green-800">Main Category:</span>
+                              <span className="text-green-700 ml-2">{(product.category as any).mainCategory}</span>
+                            </div>
+                          )}
+                          {(product.category as any).subCategory && (
+                            <div className="text-sm">
+                              <span className="font-medium text-green-800">Sub Category:</span>
+                              <span className="text-green-700 ml-2">{(product.category as any).subCategory}</span>
+                            </div>
+                          )}
+                          {(product.category as any).l4Category && (
+                            <div className="text-sm">
+                              <span className="font-medium text-green-800">L4 Category:</span>
+                              <span className="text-green-700 ml-2">{(product.category as any).l4Category}</span>
+                            </div>
+                          )}
+                          {(product.category as any).fullCategory && (
+                            <div className="text-sm">
+                              <span className="font-medium text-green-800">Full Category:</span>
+                              <span className="text-green-700 ml-2">{(product.category as any).fullCategory}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pricing Information */}
+                  {('sellingPrice' in product || 'mrp' in product || 'pricePerUnit' in product) && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Information</h3>
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {'sellingPrice' in product && (product as any).sellingPrice && (
+                            <div className="text-sm">
+                              <span className="font-medium text-purple-800">Selling Price:</span>
+                              <span className="text-purple-700 ml-2">₹{(product as any).sellingPrice}</span>
+                            </div>
+                          )}
+                          {'mrp' in product && (product as any).mrp && (
+                            <div className="text-sm">
+                              <span className="font-medium text-purple-800">MRP:</span>
+                              <span className="text-purple-700 ml-2">₹{(product as any).mrp}</span>
+                            </div>
+                          )}
+                          {'pricePerUnit' in product && (product as any).pricePerUnit && (
+                            <div className="text-sm">
+                              <span className="font-medium text-purple-800">Price Per Unit:</span>
+                              <span className="text-purple-700 ml-2">₹{(product as any).pricePerUnit}</span>
+                            </div>
+                          )}
+                          {'discount' in product && (product as any).discount && (
+                            <div className="text-sm">
+                              <span className="font-medium text-purple-800">Discount:</span>
+                              <span className="text-purple-700 ml-2">{(product as any).discount}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rating and Reviews */}
+                  {('rating' in product || 'reviewCount' in product || 'reviews' in product) && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Rating & Reviews</h3>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {'rating' in product && (product as any).rating && (
+                            <div className="text-sm">
+                              <span className="font-medium text-yellow-800">Rating:</span>
+                              <span className="text-yellow-700 ml-2">{(product as any).rating}/5</span>
+                            </div>
+                          )}
+                          {'reviewCount' in product && (product as any).reviewCount && (
+                            <div className="text-sm">
+                              <span className="font-medium text-yellow-800">Review Count:</span>
+                              <span className="text-yellow-700 ml-2">{(product as any).reviewCount}</span>
+                            </div>
+                          )}
+                          {'reviews' in product && product.reviews && typeof product.reviews === 'object' && (
+                            <>
+                              {(product.reviews as any).totalReviews && (
+                                <div className="text-sm">
+                                  <span className="font-medium text-yellow-800">Total Reviews:</span>
+                                  <span className="text-yellow-700 ml-2">{(product.reviews as any).totalReviews}</span>
+                                </div>
+                              )}
+                              {(product.reviews as any).averageRating && (
+                                <div className="text-sm">
+                                  <span className="font-medium text-yellow-800">Average Rating:</span>
+                                  <span className="text-yellow-700 ml-2">{(product.reviews as any).averageRating}/5</span>
+                                </div>
+                              )}
+                              {(product.reviews as any).reviewWidget && (
+                                <div className="text-sm">
+                                  <span className="font-medium text-yellow-800">Review System:</span>
+                                  <span className="text-yellow-700 ml-2">{(product.reviews as any).reviewWidget}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bank Offers */}
+                  {'bankOffers' in product && product.bankOffers && Array.isArray(product.bankOffers) && product.bankOffers.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Bank Offers</h3>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="space-y-3">
+                          {product.bankOffers.map((offer: any, index: number) => (
+                            <div key={index} className="bg-white p-3 rounded border border-blue-200">
+                              <div className="text-sm font-medium text-blue-800 mb-2">{offer.title || offer.type}</div>
+                              <div className="text-xs text-blue-700 mb-2">{offer.description}</div>
+                              {offer.count && (
+                                <div className="text-xs text-blue-600 font-medium">{offer.count}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Coupon Offers */}
+                  {'couponOffers' in product && product.couponOffers && Array.isArray(product.couponOffers) && product.couponOffers.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Coupon Offers</h3>
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="space-y-3">
+                          {product.couponOffers.map((offer: any, index: number) => (
+                            <div key={index} className="bg-white p-3 rounded border border-green-200">
+                              <div className="text-sm font-medium text-green-800 mb-2">{offer.title || offer.type}</div>
+                              <div className="text-xs text-green-700 mb-2">{offer.description}</div>
+                              {offer.count && (
+                                <div className="text-xs text-green-600 font-medium">{offer.count}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* All Offers */}
+                  {'allOffers' in product && product.allOffers && Array.isArray(product.allOffers) && product.allOffers.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">All Available Offers</h3>
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                        <div className="space-y-3">
+                          {product.allOffers.map((offer: any, index: number) => (
+                            <div key={index} className="bg-white p-3 rounded border border-orange-200">
+                              <div className="flex items-center space-x-2 mb-2">
+                                {offer.icon && (
+                                  <img src={offer.icon} alt={offer.title} className="w-5 h-5" />
+                                )}
+                                <div className="text-sm font-medium text-orange-800">{offer.title}</div>
+                              </div>
+                              <div className="text-xs text-orange-700 mb-2">{offer.description}</div>
+                              {offer.count && (
+                                <div className="text-xs text-orange-600 font-medium">{offer.count}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Product Information - Detailed */}
+                  {'productInformation' in product && product.productInformation && typeof product.productInformation === 'object' && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed Product Information</h3>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div className="space-y-4">
+                          {Object.entries(product.productInformation).map(([sectionName, sectionData], sectionIndex) => (
+                            <div key={sectionIndex} className="bg-white p-3 rounded border">
+                              <h4 className="text-sm font-semibold text-gray-800 mb-2 border-b border-gray-200 pb-1">
+                                {sectionName}
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {typeof sectionData === 'object' && sectionData !== null ? (
+                                  Object.entries(sectionData).map(([key, value], index) => (
+                                    <div key={index} className="text-xs">
+                                      <span className="font-medium text-gray-700">{key}:</span>
+                                      <span className="text-gray-600 ml-2">{String(value)}</span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-xs text-gray-600">{String(sectionData)}</div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Specifications - Table Format */}
+                  {'specifications' in product && product.specifications && Object.keys(product.specifications).length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Specifications</h3>
+                      <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-200">Feature</th>
+                              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-b border-gray-200">Details</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(product.specifications).map(([key, value], index) => (
+                              <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
+                                <td className="px-4 py-3 text-sm font-medium text-gray-600 border-b border-gray-100">
+                                  {key}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900 border-b border-gray-100">
+                                  {String(value)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Delivery Information */}
+                  {'deliveryInfo' in product && product.deliveryInfo && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Information</h3>
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {(product.deliveryInfo as any).promise && (
+                            <div className="text-sm">
+                              <span className="font-medium text-indigo-800">Delivery Promise:</span>
+                              <span className="text-indigo-700 ml-2">{(product.deliveryInfo as any).promise}</span>
+                            </div>
+                          )}
+                          {(product.deliveryInfo as any).location && (
+                            <div className="text-sm">
+                              <span className="font-medium text-indigo-800">Location:</span>
+                              <span className="text-indigo-700 ml-2">{(product.deliveryInfo as any).location}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Return Policy */}
+                  {'returnPolicy' in product && product.returnPolicy && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Return Policy</h3>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <div className="text-sm text-yellow-800 leading-relaxed">
+                          {typeof product.returnPolicy === 'string' ? product.returnPolicy : JSON.stringify(product.returnPolicy)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Availability */}
+                  {'availability' in product && product.availability && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Availability</h3>
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {typeof product.availability === 'object' && product.availability && 'inStock' in product.availability && (
+                            <div className="text-sm">
+                              <span className="font-medium text-emerald-800">In Stock:</span>
+                              <span className={`ml-2 font-medium ${(product.availability as any).inStock ? 'text-green-600' : 'text-red-600'}`}>
+                                {(product.availability as any).inStock ? 'Yes' : 'No'}
+                              </span>
+                            </div>
+                          )}
+                          {typeof product.availability === 'object' && product.availability && 'status' in product.availability && (
+                            <div className="text-sm">
+                              <span className="font-medium text-emerald-800">Status:</span>
+                              <span className="text-emerald-700 ml-2">{(product.availability as any).status}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Hidden Data */}
+                  {'hiddenData' in product && product.hiddenData && typeof product.hiddenData === 'object' && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Technical Information</h3>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {Object.entries(product.hiddenData).map(([key, value], index) => (
+                            <div key={index} className="text-sm">
+                              <span className="font-medium text-gray-800">{key}:</span>
+                              <span className="text-gray-700 ml-2 font-mono text-xs">{String(value)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* All Product Images */}
+                  {'productImages' in product && product.productImages && Array.isArray(product.productImages) && product.productImages.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">All Product Images ({product.productImages.length} images)</h3>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {product.productImages.map((image: any, index: number) => (
+                            <div key={index} className="text-center">
+                              <div className="mb-2">
+                                <img 
+                                  src={image.url} 
+                                  alt={image.alt || `Product image ${index + 1}`} 
+                                  className="w-full h-24 object-cover rounded border"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04MCAxMDBDODAgODkuNTQ0NyA4OC4wMDAxIDgxIDEwMCA4MUMxMTEuOTU2IDgxIDEyMCA4OS41NDQ3IDEyMCAxMDBDMTIwIDExMC40NTUgMTExLjk1NiAxMTkgMTAwIDExOUM4OC4wMDAxIDExOSA4MCAxMTAuNDU1IDgwIDEwMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTEwMCAxMzVDMTE1LjQ2NCAxMzUgMTI3LjUgMTIyLjk2NCAxMjcuNSAxMDcuNUMxMjcuNSA5Mi4wMzU5IDExNS40NjQgODAgMTAwIDgwQzg0LjUzNTkgODAgNzIuNSA5Mi4wMzU5IDcyLjUgMTA3LjVDNzIuNSA5Mi4wMzU5IDcyLjUgMTA3LjVDNzIuNSAxMjIuOTY0IDg0LjUzNTkgMTM1IDEwMCAxMzVaIiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4K';
+                                  }}
+                                />
+                                <div className="text-xs text-gray-600 mt-1">
+                                  {image.alt || `Image ${index + 1}`}
+                                  {image.index !== undefined && ` (Index: ${image.index})`}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
