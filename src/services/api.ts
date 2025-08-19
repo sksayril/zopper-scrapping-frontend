@@ -4,6 +4,7 @@ export interface ProductImage {
   alt: string;
   type?: string;
   index?: number;
+  highQualityUrl?: string;
 }
 
 export interface ProductSpecification {
@@ -33,12 +34,56 @@ export interface ProductDelivery {
   estimatedDays?: number | null;
   freeShipping?: boolean;
   deliveryInfo?: string | null;
+  // Max Fashion specific fields
+  pincode?: {
+    available: boolean;
+    text: string;
+  };
+  clickAndCollect?: {
+    available: boolean;
+    text: string;
+  };
 }
 
 export interface ProductSize {
   size: string;
   code: string;
   available: boolean;
+}
+
+// Max Fashion specific interfaces
+export interface MaxFashionSocialSharing {
+  available: boolean;
+  platforms: Array<{
+    name: string;
+    iconUrl?: string | null;
+    text?: string | null;
+  }>;
+}
+
+export interface MaxFashionShopTheLook {
+  available: boolean;
+  title?: string | null;
+  products: any[];
+}
+
+export interface MaxFashionReturnPolicy {
+  available: boolean;
+  days: number;
+  text: string;
+  detailsUrl: string;
+}
+
+export interface MaxFashionPaymentOptions {
+  installmentsAvailable: boolean;
+  text: string;
+  detailsUrl?: string | null;
+}
+
+export interface MaxFashionOverview {
+  description: string;
+  details: any[];
+  styleNote?: string | null;
 }
 
 // Base product interface
@@ -55,16 +100,63 @@ export interface BaseProduct {
   ratingCount?: string;
   reviewCount?: string;
   images: ProductImage[] | string[];
+  mainImage?: string;
   description: string;
   highlights: string[];
   specifications: ProductSpecification;
   scrapedAt: string;
   source?: string;
+  // Ajio specific fields
+  bankOffers?: string[];
+  couponOffers?: string[];
+  colors?: string[];
+  availableColors?: number;
+  availableSizes?: number;
+  category?: {
+    breadcrumbs: string[];
+    mainCategory: string;
+    subCategory: string;
+    fullCategory: string;
+  };
+  deliveryInfo?: {
+    message: string;
+  };
+  returnPolicy?: string | MaxFashionReturnPolicy;
+  pricePerUnit?: string;
+  productInformation?: {
+    [key: string]: string;
+  };
+  // Flipkart specific fields
+  thumbnails?: ProductImage[];
+  highQualityImages?: string[];
+  // Vijay Sales specific fields
+  emi?: {
+    amount?: number | null;
+    months?: number | null;
+    text?: string;
+  };
+  loyaltyPoints?: number;
+  warranty?: {
+    title?: string;
+    description?: string;
+  };
+  installation?: {
+    title?: string;
+    description?: string;
+  };
+  exchangeOffer?: string;
+  pricing?: {
+    mrp?: number;
+    sellingPrice?: number | null;
+    discount?: string;
+    currency?: string;
+    includesTax?: boolean;
+  };
 }
 
 // Extended product interface for sites with additional data
 export interface ExtendedProduct extends BaseProduct {
-  seller?: ProductSeller;
+  seller?: ProductSeller | string;
   offers?: ProductOffer[];
   breadcrumbs?: ProductBreadcrumb[];
   availability?: string;
@@ -72,6 +164,12 @@ export interface ExtendedProduct extends BaseProduct {
   brand?: string;
   productId?: string;
   sizes?: ProductSize[];
+  // Max Fashion specific fields
+  socialSharing?: MaxFashionSocialSharing;
+  shopTheLook?: MaxFashionShopTheLook;
+  returnPolicy?: MaxFashionReturnPolicy;
+  paymentOptions?: MaxFashionPaymentOptions;
+  overview?: MaxFashionOverview;
 }
 
 // Union type for all product types
@@ -107,26 +205,26 @@ export const SUPPORTED_SITES = [
     icon: '🛒',
     description: 'India\'s leading e-commerce platform'
   },
-  {
-    id: 'amazon',
-    name: 'Amazon',
-    domain: 'amazon.in',
-    placeholder: 'https://www.amazon.in/s?k=...',
-    sampleUrl: 'https://www.amazon.in/s?k=smartphones&ref=sr_pg_1',
-    color: 'from-yellow-500 to-orange-500',
-    icon: '📦',
-    description: 'Global e-commerce giant'
-  },
-  {
-    id: 'snapdeal',
-    name: 'Snapdeal',
-    domain: 'snapdeal.com',
-    placeholder: 'https://www.snapdeal.com/product/...',
-    sampleUrl: 'https://www.snapdeal.com/product/bhawna-collection-loard-shiv-trishul/672311651336',
-    color: 'from-blue-500 to-blue-600',
-    icon: '🎯',
-    description: 'Value-focused online marketplace'
-  },
+  // {
+  //   id: 'amazon',
+  //   name: 'Amazon',
+  //   domain: 'amazon.in',
+  //   placeholder: 'https://www.amazon.in/s?k=...',
+  //   sampleUrl: 'https://www.amazon.in/s?k=smartphones&ref=sr_pg_1',
+  //   color: 'from-yellow-500 to-orange-500',
+  //   icon: '📦',
+  //   description: 'Global e-commerce giant'
+  // },
+  // {
+  //   id: 'snapdeal',
+  //   name: 'Snapdeal',
+  //   domain: 'snapdeal.com',
+  //   placeholder: 'https://www.snapdeal.com/product/...',
+  //   sampleUrl: 'https://www.snapdeal.com/product/bhawna-collection-loard-shiv-trishul/672311651336',
+  //   color: 'from-blue-500 to-blue-600',
+  //   icon: '🎯',
+  //   description: 'Value-focused online marketplace'
+  // },
   {
     id: 'myntra',
     name: 'Myntra',
@@ -146,7 +244,47 @@ export const SUPPORTED_SITES = [
     color: 'from-purple-500 to-pink-500',
     icon: '👗',
     description: 'Fashion retail chain'
-  }
+  },
+  {
+    id: 'tatacliq',
+    name: 'TataCliq',
+    domain: 'tatacliq.com',
+    placeholder: 'https://www.tatacliq.com/...',
+    sampleUrl: 'https://www.tatacliq.com/guess-analog-rose-gold-dial-womens-watch-gw0383l2/p-mp000000019270293',
+    color: 'from-teal-500 to-cyan-500',
+    icon: '🏪',
+    description: 'Tata Group\'s e-commerce platform'
+  },
+  {
+    id: 'jiomart',
+    name: 'JioMart',
+    domain: 'jiomart.com',
+    placeholder: 'https://www.jiomart.com/...',
+    sampleUrl: 'https://www.jiomart.com/p/groceries/pears-babugosha-1-kg/590362490',
+    color: 'from-blue-600 to-indigo-600',
+    icon: '🛍️',
+    description: 'Reliance\'s online grocery & retail'
+  },
+  // {
+  //   id: 'ajio',
+  //   name: 'Ajio',
+  //   domain: 'ajio.com',
+  //   placeholder: 'https://www.ajio.com/...',
+  //   sampleUrl: 'https://www.ajio.com/poshax-men-regular-fit-zip-front-track-jacket/p/700776668_green',
+  //   color: 'from-red-500 to-pink-600',
+  //   icon: '👔',
+  //   description: 'Reliance\'s fashion destination'
+  // },
+  {
+    id: 'vijaysales',
+    name: 'Vijay Sales',
+    domain: 'vijaysales.com',
+    placeholder: 'https://www.vijaysales.com/...',
+    sampleUrl: 'https://www.vijaysales.com/p/234496/sansui-80-cm-32-inches-hd-smart-google-qled-tv-with-dolby-audio-jss32csqled',
+    color: 'from-blue-600 to-indigo-700',
+    icon: '🏪',
+    description: 'Electronics & appliances store'
+  },
 ] as const;
 
 export type SiteId = typeof SUPPORTED_SITES[number]['id'];
@@ -202,34 +340,34 @@ export const normalizeProductData = (product: any, siteId: SiteId): Product => {
     };
   }
 
-  // Handle Snapdeal specific structure
-  if (siteId === 'snapdeal') {
-    return {
-      id: product.productId || product.id,
-      title: product.title,
-      url: product.url,
-      currentPrice: typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice,
-      originalPrice: typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice,
-      discount: typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount,
-      discountPercentage: product.discountPercentage,
-      currency: product.currency,
-      rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
-      images: Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
-        typeof img === 'string' 
-          ? { url: img, alt: '', type: 'product', index }
-          : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
-      ) : [],
-      description: product.description,
-      highlights: product.highlights || [],
-      specifications: product.specifications || {},
-      brand: product.brand,
-      productId: product.productId,
-      sizes: product.sizes,
-      availability: product.availability,
-      scrapedAt: product.scrapedAt,
-      source: product.source
-    };
-  }
+  // Handle Snapdeal specific structure (commented out as snapdeal is disabled)
+  // if (siteId === 'snapdeal') {
+  //   return {
+  //     id: product.productId || product.id,
+  //     title: product.title,
+  //     url: product.url,
+  //     currentPrice: typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice,
+  //     originalPrice: typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice,
+  //     discount: typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount,
+  //     discountPercentage: product.discountPercentage,
+  //     currency: product.currency,
+  //     rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
+  //     images: Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
+  //       typeof img === 'string' 
+  //         ? { url: img, alt: '', type: 'product', index }
+  //         : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
+  //     ) : [],
+  //     description: product.description,
+  //     highlights: product.highlights || [],
+  //     specifications: product.specifications || {},
+  //     brand: product.brand,
+  //     productId: product.productId,
+  //     sizes: product.sizes,
+  //     availability: product.availability,
+  //     scrapedAt: product.scrapedAt,
+  //     source: product.source
+  //   };
+  // }
 
   // Handle Myntra specific structure
   if (siteId === 'myntra') {
@@ -261,7 +399,237 @@ export const normalizeProductData = (product: any, siteId: SiteId): Product => {
     };
   }
 
-  // Handle other sites (Flipkart, Amazon, etc.)
+  // Handle TataCliq specific structure
+  if (siteId === 'tatacliq') {
+    return {
+      id: product.productId || product.id,
+      title: product.title,
+      url: product.url,
+      currentPrice: typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice,
+      originalPrice: typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice,
+      discount: typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount,
+      discountPercentage: product.discountPercentage,
+      currency: product.currency,
+      rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
+      ratingCount: typeof product.ratingCount === 'number' ? product.ratingCount.toString() : product.ratingCount,
+      images: Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
+        typeof img === 'string' 
+          ? { url: img, alt: '', type: 'product', index }
+          : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
+      ) : [],
+      description: product.description,
+      highlights: product.highlights || [],
+      specifications: product.specifications || {},
+      brand: product.brand,
+      productId: product.productId,
+      availability: product.availability,
+      scrapedAt: product.scrapedAt,
+      source: product.source
+    };
+  }
+
+  // Handle JioMart specific structure
+  if (siteId === 'jiomart') {
+    return {
+      id: product.productId || product.id,
+      title: product.title,
+      url: product.url,
+      currentPrice: typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice,
+      originalPrice: typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice,
+      discount: typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount,
+      discountPercentage: product.discountPercentage,
+      currency: product.currency,
+      rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
+      ratingCount: typeof product.ratingCount === 'number' ? product.ratingCount.toString() : product.ratingCount,
+      images: Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
+        typeof img === 'string' 
+          ? { url: img, alt: '', type: 'product', index }
+          : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
+      ) : [],
+      description: product.description,
+      highlights: product.highlights || [],
+      specifications: product.specifications || {},
+      brand: product.brand,
+      productId: product.productId,
+      availability: product.availability,
+      delivery: product.delivery,
+      scrapedAt: product.scrapedAt,
+      source: product.source
+    };
+  }
+
+  // Handle Ajio specific structure
+  if (siteId === 'ajio') {
+    return {
+      id: product.productId || product.id,
+      title: product.productName || product.productLongName || product.title,
+      url: product.url,
+      currentPrice: product.sellingPrice ? `₹${product.sellingPrice}` : (typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice),
+      originalPrice: product.mrp ? `₹${product.mrp}` : (typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice),
+      discount: product.discount ? `${product.discount}% off` : (typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount),
+      discountPercentage: product.discount || product.discountPercentage,
+      currency: product.currency || '₹',
+      rating: product.rating ? product.rating.toString() : (typeof product.rating === 'number' ? product.rating.toString() : product.rating),
+      ratingCount: product.reviewCount ? product.reviewCount.toString() : (typeof product.ratingCount === 'number' ? product.ratingCount.toString() : product.ratingCount),
+      reviewCount: product.reviewCount ? product.reviewCount.toString() : (typeof product.reviewCount === 'number' ? product.reviewCount.toString() : product.reviewCount),
+      images: product.productImages ? product.productImages.map((img: string, index: number) => ({
+        url: img,
+        alt: `${product.productName || 'Product'} - Image ${index + 1}`,
+        type: 'product',
+        index
+      })) : (Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
+        typeof img === 'string' 
+          ? { url: img, alt: '', type: 'product', index }
+          : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
+      ) : []),
+      mainImage: product.mainImage,
+      description: product.description || product.productInformation?.Commodity || '',
+      highlights: product.features || product.highlights || [],
+      specifications: product.specifications || {},
+      brand: product.brand,
+      productId: product.productId,
+      sizes: product.sizes,
+      availability: product.availability,
+      offers: product.allOffers ? product.allOffers.map((offer: string) => ({
+        type: 'Offer',
+        description: offer
+      })) : product.offers,
+      bankOffers: product.bankOffers,
+      couponOffers: product.couponOffers,
+      colors: product.colors,
+      availableColors: product.availableColors,
+      availableSizes: product.availableSizes,
+      category: product.category,
+      seller: product.seller,
+      deliveryInfo: product.deliveryInfo,
+      returnPolicy: product.returnPolicy,
+      pricePerUnit: product.pricePerUnit,
+      productInformation: product.productInformation,
+      scrapedAt: product.timestamp || product.scrapedAt,
+      source: product.source || 'AJIO'
+    };
+  }
+
+  // Handle Croma specific structure
+  if (siteId === 'croma') {
+    return {
+      id: product.productId || product.id,
+      title: product.title,
+      url: product.url,
+      currentPrice: typeof product.currentPrice === 'number' ? `₹${product.currentPrice}` : product.currentPrice,
+      originalPrice: typeof product.originalPrice === 'number' ? `₹${product.originalPrice}` : product.originalPrice,
+      discount: typeof product.discount === 'number' ? `₹${product.discount} off` : product.discount,
+      discountPercentage: product.discountPercentage,
+      currency: product.currency,
+      rating: typeof product.rating === 'number' ? product.rating.toString() : product.rating,
+      ratingCount: typeof product.ratingCount === 'number' ? product.ratingCount.toString() : product.ratingCount,
+      images: Array.isArray(product.images) ? product.images.map((img: any, index: number) => 
+        typeof img === 'string' 
+          ? { url: img, alt: '', type: 'product', index }
+          : { url: img.url, alt: img.alt || '', type: 'product', index: img.index || index }
+      ) : [],
+      description: product.description,
+      highlights: product.highlights || [],
+      specifications: product.specifications || {},
+      brand: product.brand,
+      productId: product.productId,
+      availability: product.availability,
+      offers: product.offers,
+      delivery: product.delivery,
+      scrapedAt: product.scrapedAt,
+      source: product.source
+    };
+  }
+
+  // Handle Flipkart specific structure
+  if (siteId === 'flipkart') {
+    return {
+      id: product.id,
+      title: product.title,
+      url: product.url,
+      currentPrice: product.currentPrice,
+      originalPrice: product.originalPrice,
+      discount: product.discount,
+      discountPercentage: product.discount ? parseInt(product.discount.replace('% off', '')) : undefined,
+      currency: '₹',
+      rating: product.rating,
+      ratingCount: product.ratingCount,
+      reviewCount: product.reviewCount,
+      images: product.images?.main || product.images?.all || product.images || [],
+      mainImage: product.images?.main?.[0]?.url || product.images?.main?.[0]?.highQualityUrl,
+      thumbnails: product.images?.thumbnails || [],
+      highQualityImages: product.images?.highQuality || [],
+      description: product.description,
+      highlights: product.highlights || [],
+      specifications: product.specifications || {},
+      brand: product.brand,
+      productId: product.id,
+      availability: product.availability,
+      offers: product.offers,
+      breadcrumbs: product.breadcrumbs,
+      delivery: product.delivery,
+      scrapedAt: product.scrapedAt,
+      source: 'Flipkart'
+    };
+  }
+
+  // Handle Vijay Sales specific structure
+  if (siteId === 'vijaysales') {
+    // Calculate selling price from MRP and discount if selling price is null
+    let calculatedSellingPrice = product.pricing?.sellingPrice;
+    if (!calculatedSellingPrice && product.pricing?.mrp && product.pricing?.discount) {
+      const discountMatch = product.pricing.discount.match(/(\d+)%/);
+      if (discountMatch) {
+        const discountPercent = parseInt(discountMatch[1]);
+        calculatedSellingPrice = Math.round(product.pricing.mrp * (1 - discountPercent / 100));
+      }
+    }
+
+    return {
+      id: product.productSku || product.id || product.productId,
+      title: product.productName || product.title,
+      url: product.productUrl || product.url,
+      currentPrice: calculatedSellingPrice || product.pricing?.sellingPrice || product.currentPrice || product.sellingPrice,
+      originalPrice: product.pricing?.mrp || product.originalPrice || product.mrp,
+      discount: product.pricing?.discount || product.discount,
+      discountPercentage: product.pricing?.discount ? 
+        (product.pricing.discount.includes('%') ? 
+          parseInt(product.pricing.discount.match(/(\d+)%/)?.[1] || '0') : undefined
+        ) : product.discountPercentage,
+      currency: product.pricing?.currency || product.currency || '₹',
+      rating: product.rating?.value || product.rating,
+      ratingCount: product.rating?.totalRatings || product.ratingCount,
+      reviewCount: product.rating?.totalReviews || product.reviewCount,
+      images: Array.isArray(product.images) ? product.images
+        .filter((img: string) => img && !img.includes('icons/') && !img.includes('youtube.com'))
+        .map((img: string, index: number) => ({ 
+          url: img, 
+          alt: `${product.productName || 'Product'} - Image ${index + 1}`, 
+          type: 'product', 
+          index 
+        })) : [],
+      mainImage: product.images?.[0] || product.mainImage,
+      description: product.description,
+      highlights: product.keyFeatures || product.highlights || product.features || [],
+      specifications: product.specifications || {},
+      brand: product.brand,
+      productId: product.productSku || product.id || product.productId,
+      availability: product.availability,
+      offers: product.extraDeals || product.offers,
+      delivery: product.delivery,
+      scrapedAt: product.scrapedAt,
+      source: 'Vijay Sales',
+      // Vijay Sales specific fields
+      emi: product.emi,
+      loyaltyPoints: product.loyaltyPoints,
+      warranty: product.warranty,
+      installation: product.installation,
+      exchangeOffer: product.exchangeOffer,
+      pricing: product.pricing
+    };
+  }
+
+  // Handle other sites (Amazon, etc.)
   return product;
 };
 
